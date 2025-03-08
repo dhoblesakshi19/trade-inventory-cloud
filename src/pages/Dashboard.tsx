@@ -1,6 +1,6 @@
-
 import React, { useMemo } from "react";
 import Layout from "@/components/Layout";
+import BackButton from "@/components/BackButton";
 import { useInventory } from "@/context/InventoryContext";
 import { useAuth } from "@/context/AuthContext";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -87,8 +87,13 @@ const Dashboard = () => {
   return (
     <Layout>
       <div className="pb-4">
-        <h1 className="text-2xl font-bold text-gray-800">Dashboard</h1>
-        <p className="text-gray-600">Welcome back, {user?.name}</p>
+        <div className="flex items-center">
+          <BackButton className="mr-4" />
+          <div>
+            <h1 className="text-2xl font-bold text-gray-800">Dashboard</h1>
+            <p className="text-gray-600">Welcome back, {user?.name}</p>
+          </div>
+        </div>
       </div>
 
       {/* Stats cards */}

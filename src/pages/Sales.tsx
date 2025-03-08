@@ -1,6 +1,7 @@
 
 import React, { useState } from "react";
 import Layout from "@/components/Layout";
+import BackButton from "@/components/BackButton";
 import { useInventory } from "@/context/InventoryContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -22,13 +23,24 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Plus, Search, Download } from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Plus, Search, Download, FileText, FileSpreadsheet, ChevronDown } from "lucide-react";
 import { format } from "date-fns";
+import { generateInvoicePDF, generateInvoicePDFForSales } from "@/utils/invoiceUtils";
+import { exportSalesToExcel } from "@/utils/excelUtils";
+import { SalesTransaction } from "@/context/InventoryContext";
 
 const Sales = () => {
   const { inventory, sales, recordSale } = useInventory();
   const [searchTerm, setSearchTerm] = useState("");
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
+  const [selectedSale, setSelectedSale] = useState<SalesTransaction | null>(null);
+  const [isInvoiceDialogOpen, setIsInvoiceDialogOpen] = useState(false);
   
   // Form state
   const [formData, setFormData] = useState({
@@ -76,50 +88,71 @@ const Sales = () => {
     resetForm();
   };
   
-  // Export sales data to CSV
-  const exportSalesToCSV = () => {
-    // Create CSV content
-    const headers = ["Product", "Quantity", "Unit Price", "Total Amount", "Date"];
-    const csvContent = [
-      headers.join(","),
-      ...sales.map((sale) => [
-        sale.productName,
-        sale.quantity,
-        sale.unitPrice,
-        sale.totalAmount,
-        format(new Date(sale.date), "yyyy-MM-dd"),
-      ].join(",")),
-    ].join("\n");
-    
-    // Create and download the file
-    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement("a");
-    link.setAttribute("href", url);
-    link.setAttribute("download", `sales_${format(new Date(), "yyyy-MM-dd")}.csv`);
-    link.style.visibility = "hidden";
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+  // Handle viewing invoice
+  const handleViewInvoice = (sale: SalesTransaction) => {
+    setSelectedSale(sale);
+    setIsInvoiceDialogOpen(true);
+  };
+  
+  // Generate and download invoice PDF
+  const downloadInvoice = () => {
+    if (selectedSale) {
+      generateInvoicePDF(selectedSale);
+    }
+  };
+  
+  // Export all sales as PDF invoice
+  const exportAllSalesAsPDF = () => {
+    generateInvoicePDFForSales(filteredSales);
+  };
+  
+  // Export sales data to Excel
+  const exportSalesToExcelFile = () => {
+    exportSalesToExcel(filteredSales);
   };
 
   return (
     <Layout>
       <div className="flex flex-col space-y-6">
-        <div className="flex items-center justify-between">
+        <div className="flex items-center">
+          <BackButton className="mr-4" />
           <div>
             <h1 className="text-2xl font-bold text-gray-800">Sales Management</h1>
             <p className="text-gray-600">Record and track your product sales</p>
           </div>
+        </div>
+        
+        <div className="flex items-center justify-between">
+          <div className="relative flex-1 max-w-md">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+            <Input
+              className="pl-10"
+              placeholder="Search sales by product name..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
+          </div>
           
           <div className="flex gap-2">
-            <Button 
-              variant="outline" 
-              onClick={exportSalesToCSV}
-            >
-              <Download className="w-4 h-4 mr-2" />
-              Export to CSV
-            </Button>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline">
+                  <Download className="w-4 h-4 mr-2" />
+                  Export
+                  <ChevronDown className="w-4 h-4 ml-2" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent>
+                <DropdownMenuItem onClick={exportSalesToExcelFile}>
+                  <FileSpreadsheet className="w-4 h-4 mr-2" />
+                  Export to Excel
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={exportAllSalesAsPDF}>
+                  <FileText className="w-4 h-4 mr-2" />
+                  Export to PDF
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
             
             <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
               <DialogTrigger asChild>
@@ -210,17 +243,6 @@ const Sales = () => {
           </div>
         </div>
         
-        {/* Search bar */}
-        <div className="relative mb-4">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
-          <Input
-            className="pl-10"
-            placeholder="Search sales by product name..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-          />
-        </div>
-        
         {/* Sales table */}
         <div className="rounded-md border">
           <Table>
@@ -231,6 +253,7 @@ const Sales = () => {
                 <TableHead>Quantity</TableHead>
                 <TableHead>Unit Price</TableHead>
                 <TableHead>Total Amount</TableHead>
+                <TableHead className="w-[100px]">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -242,11 +265,21 @@ const Sales = () => {
                     <TableCell>{sale.quantity}</TableCell>
                     <TableCell>₹{sale.unitPrice.toLocaleString()}</TableCell>
                     <TableCell className="font-medium">₹{sale.totalAmount.toLocaleString()}</TableCell>
+                    <TableCell>
+                      <Button 
+                        variant="ghost" 
+                        size="sm"
+                        onClick={() => handleViewInvoice(sale)}
+                      >
+                        <FileText className="h-4 w-4" />
+                        <span className="sr-only">View Invoice</span>
+                      </Button>
+                    </TableCell>
                   </TableRow>
                 ))
               ) : (
                 <TableRow>
-                  <TableCell colSpan={5} className="text-center py-4 text-gray-500">
+                  <TableCell colSpan={6} className="text-center py-4 text-gray-500">
                     No sales records found
                   </TableCell>
                 </TableRow>
@@ -255,6 +288,75 @@ const Sales = () => {
           </Table>
         </div>
       </div>
+      
+      {/* Invoice Dialog */}
+      <Dialog open={isInvoiceDialogOpen} onOpenChange={setIsInvoiceDialogOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Invoice</DialogTitle>
+            <DialogDescription>
+              Sales invoice details
+            </DialogDescription>
+          </DialogHeader>
+          
+          {selectedSale && (
+            <div className="space-y-4">
+              <div className="text-center">
+                <h3 className="text-lg font-bold">Adish Trading Company</h3>
+                <p className="text-sm text-gray-500">Invoice</p>
+              </div>
+              
+              <div className="grid grid-cols-2 gap-2 text-sm">
+                <div>
+                  <p className="text-gray-500">Invoice #:</p>
+                  <p>INV-{selectedSale.id}</p>
+                </div>
+                <div>
+                  <p className="text-gray-500">Date:</p>
+                  <p>{format(new Date(selectedSale.date), "MMM dd, yyyy")}</p>
+                </div>
+              </div>
+              
+              <div className="border rounded-md p-3">
+                <div className="grid grid-cols-3 gap-2 text-sm font-medium border-b pb-2">
+                  <div>Product</div>
+                  <div>Quantity</div>
+                  <div>Amount</div>
+                </div>
+                
+                <div className="grid grid-cols-3 gap-2 text-sm py-2">
+                  <div>{selectedSale.productName}</div>
+                  <div>{selectedSale.quantity}</div>
+                  <div>₹{selectedSale.totalAmount.toLocaleString()}</div>
+                </div>
+                
+                <div className="grid grid-cols-3 gap-2 text-sm pt-2 border-t">
+                  <div colSpan={2} className="col-span-2 text-right font-medium">Subtotal:</div>
+                  <div>₹{selectedSale.totalAmount.toLocaleString()}</div>
+                </div>
+                <div className="grid grid-cols-3 gap-2 text-sm">
+                  <div colSpan={2} className="col-span-2 text-right font-medium">GST (18%):</div>
+                  <div>₹{(selectedSale.totalAmount * 0.18).toLocaleString()}</div>
+                </div>
+                <div className="grid grid-cols-3 gap-2 text-sm font-bold">
+                  <div colSpan={2} className="col-span-2 text-right">Total:</div>
+                  <div>₹{(selectedSale.totalAmount * 1.18).toLocaleString()}</div>
+                </div>
+              </div>
+            </div>
+          )}
+          
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsInvoiceDialogOpen(false)}>
+              Close
+            </Button>
+            <Button onClick={downloadInvoice}>
+              <Download className="w-4 h-4 mr-2" />
+              Download PDF
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </Layout>
   );
 };

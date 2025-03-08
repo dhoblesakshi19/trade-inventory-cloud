@@ -1,6 +1,6 @@
-
 import React, { useState, useMemo } from "react";
 import Layout from "@/components/Layout";
+import BackButton from "@/components/BackButton";
 import { useInventory } from "@/context/InventoryContext";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -35,8 +35,17 @@ import {
   Pie,
   Cell,
 } from "recharts";
-import { Download, TrendingUp, TrendingDown, Zap } from "lucide-react";
+import {
+  Download,
+  TrendingUp,
+  TrendingDown,
+  Zap,
+  FileSpreadsheet,
+  FileText,
+} from "lucide-react";
 import { format, subDays, parseISO, startOfDay, endOfDay } from "date-fns";
+import { exportSalesToExcel } from "@/utils/excelUtils";
+import { generateInvoicePDFForSales } from "@/utils/invoiceUtils";
 
 // Chart colors
 const COLORS = ["#3b82f6", "#2563eb", "#1d4ed8", "#1e40af", "#1e3a8a"];
@@ -156,41 +165,21 @@ const Reports = () => {
     }));
   }, [filteredSales, inventory]);
   
-  // Export report to CSV
-  const exportReportToCSV = () => {
-    // Create CSV content for sales data within the range
-    const headers = ["Date", "Product", "Category", "Quantity", "Unit Price", "Total Amount"];
-    const csvContent = [
-      headers.join(","),
-      ...filteredSales.map((sale) => {
-        const product = inventory.find((p) => p.id === sale.productId);
-        return [
-          format(parseISO(sale.date), "yyyy-MM-dd"),
-          sale.productName,
-          product?.category || "Unknown",
-          sale.quantity,
-          sale.unitPrice,
-          sale.totalAmount,
-        ].join(",");
-      }),
-    ].join("\n");
-    
-    // Create and download the file
-    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement("a");
-    link.setAttribute("href", url);
-    link.setAttribute("download", `sales_report_${format(new Date(), "yyyy-MM-dd")}.csv`);
-    link.style.visibility = "hidden";
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+  // Export report to Excel
+  const exportReportToExcel = () => {
+    exportSalesToExcel(filteredSales);
+  };
+  
+  // Export report to PDF
+  const exportReportToPDF = () => {
+    generateInvoicePDFForSales(filteredSales);
   };
 
   return (
     <Layout>
       <div className="flex flex-col space-y-6">
-        <div className="flex items-center justify-between">
+        <div className="flex items-center">
+          <BackButton className="mr-4" />
           <div>
             <h1 className="text-2xl font-bold text-gray-800">Sales Reports</h1>
             <p className="text-gray-600">
@@ -198,28 +187,37 @@ const Reports = () => {
               {format(endDate, "MMM dd, yyyy")}
             </p>
           </div>
+        </div>
+        
+        <div className="flex items-center justify-between">
+          <Select
+            value={timeRange}
+            onValueChange={setTimeRange}
+          >
+            <SelectTrigger className="w-36">
+              <SelectValue placeholder="Time Range" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="7days">Last 7 Days</SelectItem>
+              <SelectItem value="30days">Last 30 Days</SelectItem>
+              <SelectItem value="90days">Last 90 Days</SelectItem>
+            </SelectContent>
+          </Select>
           
           <div className="flex gap-2">
-            <Select
-              value={timeRange}
-              onValueChange={setTimeRange}
-            >
-              <SelectTrigger className="w-36">
-                <SelectValue placeholder="Time Range" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="7days">Last 7 Days</SelectItem>
-                <SelectItem value="30days">Last 30 Days</SelectItem>
-                <SelectItem value="90days">Last 90 Days</SelectItem>
-              </SelectContent>
-            </Select>
-            
             <Button 
               variant="outline" 
-              onClick={exportReportToCSV}
+              onClick={exportReportToExcel}
             >
-              <Download className="w-4 h-4 mr-2" />
-              Export Report
+              <FileSpreadsheet className="w-4 h-4 mr-2" />
+              Export to Excel
+            </Button>
+            <Button 
+              variant="outline" 
+              onClick={exportReportToPDF}
+            >
+              <FileText className="w-4 h-4 mr-2" />
+              Export to PDF
             </Button>
           </div>
         </div>
