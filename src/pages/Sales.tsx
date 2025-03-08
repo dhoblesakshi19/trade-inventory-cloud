@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import Layout from "@/components/Layout";
 import BackButton from "@/components/BackButton";
@@ -42,24 +41,20 @@ const Sales = () => {
   const [selectedSale, setSelectedSale] = useState<SalesTransaction | null>(null);
   const [isInvoiceDialogOpen, setIsInvoiceDialogOpen] = useState(false);
   
-  // Form state
   const [formData, setFormData] = useState({
     productId: "",
     quantity: 1,
   });
   
-  // Computed value for selected product
   const selectedProduct = inventory.find((item) => item.id === formData.productId);
   const totalAmount = selectedProduct ? selectedProduct.unitPrice * formData.quantity : 0;
   
-  // Filter sales based on search
   const filteredSales = sales
     .filter((sale) =>
       sale.productName.toLowerCase().includes(searchTerm.toLowerCase())
     )
     .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
   
-  // Reset form data
   const resetForm = () => {
     setFormData({
       productId: "",
@@ -67,7 +62,6 @@ const Sales = () => {
     });
   };
   
-  // Handle recording a sale
   const handleRecordSale = () => {
     if (!selectedProduct) return;
     
@@ -88,25 +82,21 @@ const Sales = () => {
     resetForm();
   };
   
-  // Handle viewing invoice
   const handleViewInvoice = (sale: SalesTransaction) => {
     setSelectedSale(sale);
     setIsInvoiceDialogOpen(true);
   };
   
-  // Generate and download invoice PDF
   const downloadInvoice = () => {
     if (selectedSale) {
       generateInvoicePDF(selectedSale);
     }
   };
   
-  // Export all sales as PDF invoice
   const exportAllSalesAsPDF = () => {
     generateInvoicePDFForSales(filteredSales);
   };
   
-  // Export sales data to Excel
   const exportSalesToExcelFile = () => {
     exportSalesToExcel(filteredSales);
   };
@@ -243,7 +233,6 @@ const Sales = () => {
           </div>
         </div>
         
-        {/* Sales table */}
         <div className="rounded-md border">
           <Table>
             <TableHeader>
@@ -289,7 +278,6 @@ const Sales = () => {
         </div>
       </div>
       
-      {/* Invoice Dialog */}
       <Dialog open={isInvoiceDialogOpen} onOpenChange={setIsInvoiceDialogOpen}>
         <DialogContent className="max-w-md">
           <DialogHeader>
@@ -331,15 +319,15 @@ const Sales = () => {
                 </div>
                 
                 <div className="grid grid-cols-3 gap-2 text-sm pt-2 border-t">
-                  <div colSpan={2} className="col-span-2 text-right font-medium">Subtotal:</div>
+                  <div className="col-span-2 text-right font-medium">Subtotal:</div>
                   <div>₹{selectedSale.totalAmount.toLocaleString()}</div>
                 </div>
                 <div className="grid grid-cols-3 gap-2 text-sm">
-                  <div colSpan={2} className="col-span-2 text-right font-medium">GST (18%):</div>
+                  <div className="col-span-2 text-right font-medium">GST (18%):</div>
                   <div>₹{(selectedSale.totalAmount * 0.18).toLocaleString()}</div>
                 </div>
                 <div className="grid grid-cols-3 gap-2 text-sm font-bold">
-                  <div colSpan={2} className="col-span-2 text-right">Total:</div>
+                  <div className="col-span-2 text-right">Total:</div>
                   <div>₹{(selectedSale.totalAmount * 1.18).toLocaleString()}</div>
                 </div>
               </div>
