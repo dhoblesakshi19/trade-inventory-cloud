@@ -19,7 +19,7 @@ const BackButton: React.FC<BackButtonProps> = ({ className }) => {
     <Button 
       variant="ghost" 
       onClick={goBack} 
-      className={`flex items-center ${className}`}
+      className={`flex items-center hover:bg-gray-100 dark:hover:bg-gray-800 ${className}`}
     >
       <ArrowLeft className="mr-2 h-4 w-4" />
       Back

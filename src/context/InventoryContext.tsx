@@ -1,6 +1,21 @@
 
 import React, { createContext, useContext, useState, useEffect } from "react";
+import { 
+  collection, 
+  doc, 
+  getDocs, 
+  addDoc, 
+  updateDoc, 
+  deleteDoc, 
+  onSnapshot,
+  query,
+  serverTimestamp,
+  Timestamp,
+  setDoc
+} from "firebase/firestore";
+import { db } from "@/lib/firebase";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "./AuthContext";
 
 // Define inventory item types
 export interface InventoryItem {
@@ -30,10 +45,10 @@ interface InventoryContextType {
   inventory: InventoryItem[];
   sales: SalesTransaction[];
   isLoading: boolean;
-  addInventoryItem: (item: Omit<InventoryItem, "id" | "lastUpdated">) => void;
-  updateInventoryItem: (id: string, updates: Partial<InventoryItem>) => void;
-  deleteInventoryItem: (id: string) => void;
-  recordSale: (sale: Omit<SalesTransaction, "id" | "date">) => void;
+  addInventoryItem: (item: Omit<InventoryItem, "id" | "lastUpdated">) => Promise<void>;
+  updateInventoryItem: (id: string, updates: Partial<InventoryItem>) => Promise<void>;
+  deleteInventoryItem: (id: string) => Promise<void>;
+  recordSale: (sale: Omit<SalesTransaction, "id" | "date">) => Promise<void>;
   getLowStockItems: () => InventoryItem[];
 }
 
@@ -129,98 +144,191 @@ export const InventoryProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   const [sales, setSales] = useState<SalesTransaction[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const { toast } = useToast();
+  const { user } = useAuth();
 
-  useEffect(() => {
-    // Initialize with mock data or load from localStorage
-    const loadData = () => {
-      const storedInventory = localStorage.getItem("inventory");
-      const storedSales = localStorage.getItem("sales");
+  // Initialize Firestore with sample data if empty
+  const initializeFirestore = async () => {
+    try {
+      const inventorySnapshot = await getDocs(collection(db, "inventory"));
+      const salesSnapshot = await getDocs(collection(db, "sales"));
       
-      setInventory(storedInventory ? JSON.parse(storedInventory) : INITIAL_INVENTORY);
-      setSales(storedSales ? JSON.parse(storedSales) : INITIAL_SALES);
-      setIsLoading(false);
-    };
-
-    loadData();
-  }, []);
-
-  // Save to localStorage when data changes
-  useEffect(() => {
-    if (!isLoading) {
-      localStorage.setItem("inventory", JSON.stringify(inventory));
-      localStorage.setItem("sales", JSON.stringify(sales));
+      // If inventory collection is empty, seed with initial data
+      if (inventorySnapshot.empty) {
+        for (const item of INITIAL_INVENTORY) {
+          await setDoc(doc(db, "inventory", item.id), {
+            ...item,
+            lastUpdated: new Date().toISOString()
+          });
+        }
+      }
+      
+      // If sales collection is empty, seed with initial data
+      if (salesSnapshot.empty) {
+        for (const sale of INITIAL_SALES) {
+          await setDoc(doc(db, "sales", sale.id), sale);
+        }
+      }
+    } catch (error) {
+      console.error("Error initializing Firestore:", error);
     }
-  }, [inventory, sales, isLoading]);
-
-  const addInventoryItem = (item: Omit<InventoryItem, "id" | "lastUpdated">) => {
-    const newItem: InventoryItem = {
-      ...item,
-      id: Math.random().toString(36).substring(2, 9),
-      lastUpdated: new Date().toISOString(),
-    };
-
-    setInventory((prev) => [...prev, newItem]);
-    toast({
-      title: "Item Added",
-      description: `${item.name} has been added to inventory`,
-    });
   };
 
-  const updateInventoryItem = (id: string, updates: Partial<InventoryItem>) => {
-    setInventory((prev) =>
-      prev.map((item) =>
-        item.id === id
-          ? { ...item, ...updates, lastUpdated: new Date().toISOString() }
-          : item
-      )
-    );
-    toast({
-      title: "Item Updated",
-      description: `Inventory item has been updated`,
-    });
-  };
-
-  const deleteInventoryItem = (id: string) => {
-    const itemToDelete = inventory.find(item => item.id === id);
-    setInventory((prev) => prev.filter((item) => item.id !== id));
+  useEffect(() => {
+    setIsLoading(true);
     
-    if (itemToDelete) {
+    // Subscribe to inventory changes
+    const unsubscribeInventory = onSnapshot(
+      collection(db, "inventory"),
+      (snapshot) => {
+        const items: InventoryItem[] = [];
+        snapshot.forEach((doc) => {
+          items.push({ id: doc.id, ...doc.data() } as InventoryItem);
+        });
+        setInventory(items);
+      },
+      (error) => {
+        console.error("Error getting inventory:", error);
+        toast({
+          title: "Error",
+          description: "Failed to load inventory data from Firestore",
+          variant: "destructive",
+        });
+      }
+    );
+    
+    // Subscribe to sales changes
+    const unsubscribeSales = onSnapshot(
+      collection(db, "sales"),
+      (snapshot) => {
+        const salesData: SalesTransaction[] = [];
+        snapshot.forEach((doc) => {
+          salesData.push({ id: doc.id, ...doc.data() } as SalesTransaction);
+        });
+        setSales(salesData);
+        setIsLoading(false);
+      },
+      (error) => {
+        console.error("Error getting sales:", error);
+        toast({
+          title: "Error",
+          description: "Failed to load sales data from Firestore",
+          variant: "destructive",
+        });
+        setIsLoading(false);
+      }
+    );
+    
+    // Initialize Firestore with sample data if needed
+    initializeFirestore();
+    
+    return () => {
+      unsubscribeInventory();
+      unsubscribeSales();
+    };
+  }, [toast]);
+
+  const addInventoryItem = async (item: Omit<InventoryItem, "id" | "lastUpdated">) => {
+    try {
+      const newItem = {
+        ...item,
+        lastUpdated: new Date().toISOString(),
+      };
+      
+      const docRef = await addDoc(collection(db, "inventory"), newItem);
+      
       toast({
-        title: "Item Deleted",
-        description: `${itemToDelete.name} has been removed from inventory`,
+        title: "Item Added",
+        description: `${item.name} has been added to inventory`,
+      });
+    } catch (error) {
+      console.error("Error adding inventory item:", error);
+      toast({
+        title: "Error",
+        description: "Failed to add inventory item",
+        variant: "destructive",
       });
     }
   };
 
-  const recordSale = (saleData: Omit<SalesTransaction, "id" | "date">) => {
-    // Add new sale
-    const newSale: SalesTransaction = {
-      ...saleData,
-      id: Math.random().toString(36).substring(2, 9),
-      date: new Date().toISOString(),
-    };
-    
-    setSales((prev) => [...prev, newSale]);
-    
-    // Update inventory quantity
-    const item = inventory.find((item) => item.id === saleData.productId);
-    
-    if (item) {
-      const newQuantity = item.quantity - saleData.quantity;
-      updateInventoryItem(item.id, { quantity: newQuantity });
-      
-      // Check if below threshold after sale
-      if (newQuantity <= item.threshold) {
-        toast({
-          title: "Low Stock Alert",
-          description: `${item.name} is below the minimum threshold!`,
-          variant: "destructive",
-        });
-      }
+  const updateInventoryItem = async (id: string, updates: Partial<InventoryItem>) => {
+    try {
+      await updateDoc(doc(db, "inventory", id), {
+        ...updates,
+        lastUpdated: new Date().toISOString(),
+      });
       
       toast({
-        title: "Sale Recorded",
-        description: `Sale of ${saleData.quantity} ${item.unit} of ${item.name} recorded`,
+        title: "Item Updated",
+        description: `Inventory item has been updated`,
+      });
+    } catch (error) {
+      console.error("Error updating inventory item:", error);
+      toast({
+        title: "Error",
+        description: "Failed to update inventory item",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const deleteInventoryItem = async (id: string) => {
+    try {
+      const itemToDelete = inventory.find(item => item.id === id);
+      await deleteDoc(doc(db, "inventory", id));
+      
+      if (itemToDelete) {
+        toast({
+          title: "Item Deleted",
+          description: `${itemToDelete.name} has been removed from inventory`,
+        });
+      }
+    } catch (error) {
+      console.error("Error deleting inventory item:", error);
+      toast({
+        title: "Error",
+        description: "Failed to delete inventory item",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const recordSale = async (saleData: Omit<SalesTransaction, "id" | "date">) => {
+    try {
+      // Add new sale
+      const newSale = {
+        ...saleData,
+        date: new Date().toISOString(),
+      };
+      
+      await addDoc(collection(db, "sales"), newSale);
+      
+      // Update inventory quantity
+      const item = inventory.find((item) => item.id === saleData.productId);
+      
+      if (item) {
+        const newQuantity = item.quantity - saleData.quantity;
+        await updateInventoryItem(item.id, { quantity: newQuantity });
+        
+        // Check if below threshold after sale
+        if (newQuantity <= item.threshold) {
+          toast({
+            title: "Low Stock Alert",
+            description: `${item.name} is below the minimum threshold!`,
+            variant: "destructive",
+          });
+        }
+        
+        toast({
+          title: "Sale Recorded",
+          description: `Sale of ${saleData.quantity} ${item.unit} of ${item.name} recorded`,
+        });
+      }
+    } catch (error) {
+      console.error("Error recording sale:", error);
+      toast({
+        title: "Error",
+        description: "Failed to record sale",
+        variant: "destructive",
       });
     }
   };

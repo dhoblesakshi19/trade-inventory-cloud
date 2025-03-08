@@ -1,5 +1,13 @@
 
 import React, { createContext, useContext, useState, useEffect } from "react";
+import { 
+  signInWithEmailAndPassword, 
+  signOut, 
+  onAuthStateChanged,
+  User as FirebaseUser
+} from "firebase/auth";
+import { doc, getDoc, setDoc } from "firebase/firestore";
+import { auth, db } from "@/lib/firebase";
 import { useToast } from "@/hooks/use-toast";
 
 // Define user types
@@ -46,26 +54,73 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const { toast } = useToast();
 
   useEffect(() => {
-    // Check if user is already logged in via localStorage
-    const checkAuth = () => {
-      const storedUser = localStorage.getItem("user");
-      if (storedUser) {
-        setUser(JSON.parse(storedUser));
+    // Listen for auth state changes
+    const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
+      if (firebaseUser) {
+        try {
+          // Get user data from Firestore
+          const userDoc = await getDoc(doc(db, "users", firebaseUser.uid));
+          
+          if (userDoc.exists()) {
+            setUser(userDoc.data() as User);
+          } else {
+            // This shouldn't happen in normal flow, but just in case
+            console.error("User document doesn't exist for authenticated user");
+            await signOut(auth);
+            setUser(null);
+          }
+        } catch (error) {
+          console.error("Error fetching user data:", error);
+          setUser(null);
+        }
+      } else {
+        setUser(null);
       }
       setIsLoading(false);
+    });
+
+    return () => unsubscribe();
+  }, []);
+
+  // Create the demo users in Firebase if they don't exist
+  useEffect(() => {
+    const createDemoUsers = async () => {
+      try {
+        // Note: In a real app, you would NOT do this.
+        // This is just for demo purposes since we can't actually create users via Firebase Auth from the client side
+        const adminDoc = await getDoc(doc(db, "users", "admin-1"));
+        if (!adminDoc.exists()) {
+          await setDoc(doc(db, "users", "admin-1"), {
+            id: "admin-1",
+            name: "Admin User",
+            email: "admin@adishtrading.com",
+            role: "admin",
+          });
+        }
+
+        const userDoc = await getDoc(doc(db, "users", "user-1"));
+        if (!userDoc.exists()) {
+          await setDoc(doc(db, "users", "user-1"), {
+            id: "user-1",
+            name: "Staff User",
+            email: "user@adishtrading.com",
+            role: "user",
+          });
+        }
+      } catch (error) {
+        console.error("Error creating demo users:", error);
+      }
     };
 
-    checkAuth();
+    createDemoUsers();
   }, []);
 
   const login = async (email: string, password: string, role: UserRole) => {
     setIsLoading(true);
     
-    // In a real app, this would be an API call to validate credentials
     try {
-      // Simulate API call delay
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
+      // In a real app with Firebase Auth, we would use signInWithEmailAndPassword
+      // Since we're using mock users for demo, we'll validate against our mock data
       const matchingUser = 
         role === "admin" && email === MOCK_USERS.admin.email && password === MOCK_USERS.admin.password 
           ? MOCK_USERS.admin
@@ -77,16 +132,21 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         throw new Error("Invalid credentials");
       }
       
-      // Remove password before storing
-      const { password: _, ...userWithoutPassword } = matchingUser;
+      // For demo, we're setting the user directly.
+      // In a real app, this would happen through the onAuthStateChanged listener
+      setUser({
+        id: matchingUser.id,
+        name: matchingUser.name,
+        email: matchingUser.email,
+        role: matchingUser.role,
+      });
       
-      // Store user in state and localStorage
-      setUser(userWithoutPassword);
-      localStorage.setItem("user", JSON.stringify(userWithoutPassword));
+      // Save to localStorage for persistence (we'd normally rely on Firebase Auth, but for the demo)
+      localStorage.setItem("user", JSON.stringify(matchingUser));
       
       toast({
         title: "Login successful",
-        description: `Welcome, ${userWithoutPassword.name}!`,
+        description: `Welcome, ${matchingUser.name}!`,
       });
     } catch (error) {
       toast({
@@ -101,11 +161,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const logout = () => {
-    setUser(null);
-    localStorage.removeItem("user");
-    toast({
-      title: "Logged out",
-      description: "You have been successfully logged out",
+    signOut(auth).then(() => {
+      setUser(null);
+      localStorage.removeItem("user");
+      toast({
+        title: "Logged out",
+        description: "You have been successfully logged out",
+      });
+    }).catch((error) => {
+      console.error("Error signing out:", error);
     });
   };
 
