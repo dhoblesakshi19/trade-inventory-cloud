@@ -10,50 +10,14 @@ import {
   onSnapshot,
   query,
   serverTimestamp,
-  Timestamp,
   setDoc
 } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "./AuthContext";
 
-// Define inventory item types
-export interface InventoryItem {
-  id: string;
-  name: string;
-  category: string;
-  quantity: number;
-  unit: string;
-  unitPrice: number;
-  threshold: number;
-  lastUpdated: string;
-  notes?: string;
-}
-
-// Define sales transaction
-export interface SalesTransaction {
-  id: string;
-  productId: string;
-  productName: string;
-  quantity: number;
-  unitPrice: number;
-  totalAmount: number;
-  date: string;
-}
-
-interface InventoryContextType {
-  inventory: InventoryItem[];
-  sales: SalesTransaction[];
-  isLoading: boolean;
-  addInventoryItem: (item: Omit<InventoryItem, "id" | "lastUpdated">) => Promise<void>;
-  updateInventoryItem: (id: string, updates: Partial<InventoryItem>) => Promise<void>;
-  deleteInventoryItem: (id: string) => Promise<void>;
-  recordSale: (sale: Omit<SalesTransaction, "id" | "date">) => Promise<void>;
-  getLowStockItems: () => InventoryItem[];
-}
-
 // Sample inventory data
-const INITIAL_INVENTORY: InventoryItem[] = [
+const INITIAL_INVENTORY = [
   {
     id: "1",
     name: "Basmati Rice",
@@ -107,7 +71,7 @@ const INITIAL_INVENTORY: InventoryItem[] = [
 ];
 
 // Sample sales data
-const INITIAL_SALES: SalesTransaction[] = [
+const INITIAL_SALES = [
   {
     id: "s1",
     productId: "1",
@@ -137,11 +101,11 @@ const INITIAL_SALES: SalesTransaction[] = [
   },
 ];
 
-const InventoryContext = createContext<InventoryContextType | undefined>(undefined);
+const InventoryContext = createContext(undefined);
 
-export const InventoryProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [inventory, setInventory] = useState<InventoryItem[]>([]);
-  const [sales, setSales] = useState<SalesTransaction[]>([]);
+export const InventoryProvider = ({ children }) => {
+  const [inventory, setInventory] = useState([]);
+  const [sales, setSales] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const { toast } = useToast();
   const { user } = useAuth();
@@ -180,9 +144,9 @@ export const InventoryProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     const unsubscribeInventory = onSnapshot(
       collection(db, "inventory"),
       (snapshot) => {
-        const items: InventoryItem[] = [];
+        const items = [];
         snapshot.forEach((doc) => {
-          items.push({ id: doc.id, ...doc.data() } as InventoryItem);
+          items.push({ id: doc.id, ...doc.data() });
         });
         setInventory(items);
       },
@@ -200,9 +164,9 @@ export const InventoryProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     const unsubscribeSales = onSnapshot(
       collection(db, "sales"),
       (snapshot) => {
-        const salesData: SalesTransaction[] = [];
+        const salesData = [];
         snapshot.forEach((doc) => {
-          salesData.push({ id: doc.id, ...doc.data() } as SalesTransaction);
+          salesData.push({ id: doc.id, ...doc.data() });
         });
         setSales(salesData);
         setIsLoading(false);
@@ -227,7 +191,7 @@ export const InventoryProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     };
   }, [toast]);
 
-  const addInventoryItem = async (item: Omit<InventoryItem, "id" | "lastUpdated">) => {
+  const addInventoryItem = async (item) => {
     try {
       const newItem = {
         ...item,
@@ -250,7 +214,7 @@ export const InventoryProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     }
   };
 
-  const updateInventoryItem = async (id: string, updates: Partial<InventoryItem>) => {
+  const updateInventoryItem = async (id, updates) => {
     try {
       await updateDoc(doc(db, "inventory", id), {
         ...updates,
@@ -271,7 +235,7 @@ export const InventoryProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     }
   };
 
-  const deleteInventoryItem = async (id: string) => {
+  const deleteInventoryItem = async (id) => {
     try {
       const itemToDelete = inventory.find(item => item.id === id);
       await deleteDoc(doc(db, "inventory", id));
@@ -292,7 +256,7 @@ export const InventoryProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     }
   };
 
-  const recordSale = async (saleData: Omit<SalesTransaction, "id" | "date">) => {
+  const recordSale = async (saleData) => {
     try {
       // Add new sale
       const newSale = {

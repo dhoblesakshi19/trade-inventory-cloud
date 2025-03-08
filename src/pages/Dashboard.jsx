@@ -1,3 +1,4 @@
+
 import React, { useMemo } from "react";
 import Layout from "@/components/Layout";
 import BackButton from "@/components/BackButton";
@@ -53,7 +54,7 @@ const Dashboard = () => {
     const categories = inventory.reduce((acc, item) => {
       acc[item.category] = (acc[item.category] || 0) + item.quantity;
       return acc;
-    }, {} as Record<string, number>);
+    }, {});
 
     return Object.entries(categories).map(([name, value]) => ({
       name,

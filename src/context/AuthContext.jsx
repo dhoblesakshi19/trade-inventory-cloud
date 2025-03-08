@@ -3,30 +3,11 @@ import React, { createContext, useContext, useState, useEffect } from "react";
 import { 
   signInWithEmailAndPassword, 
   signOut, 
-  onAuthStateChanged,
-  User as FirebaseUser
+  onAuthStateChanged
 } from "firebase/auth";
 import { doc, getDoc, setDoc } from "firebase/firestore";
 import { auth, db } from "@/lib/firebase";
 import { useToast } from "@/hooks/use-toast";
-
-// Define user types
-export type UserRole = "admin" | "user";
-
-export interface User {
-  id: string;
-  name: string;
-  email: string;
-  role: UserRole;
-}
-
-interface AuthContextType {
-  user: User | null;
-  isAuthenticated: boolean;
-  isLoading: boolean;
-  login: (email: string, password: string, role: UserRole) => Promise<void>;
-  logout: () => void;
-}
 
 // Mock users for demonstration
 const MOCK_USERS = {
@@ -34,22 +15,22 @@ const MOCK_USERS = {
     id: "admin-1",
     name: "Admin User",
     email: "admin@adishtrading.com",
-    role: "admin" as UserRole,
+    role: "admin",
     password: "admin123",
   },
   user: {
     id: "user-1",
     name: "Staff User",
     email: "user@adishtrading.com",
-    role: "user" as UserRole,
+    role: "user",
     password: "user123",
   },
 };
 
-const AuthContext = createContext<AuthContextType | undefined>(undefined);
+const AuthContext = createContext(undefined);
 
-export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [user, setUser] = useState<User | null>(null);
+export const AuthProvider = ({ children }) => {
+  const [user, setUser] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const { toast } = useToast();
 
@@ -62,7 +43,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           const userDoc = await getDoc(doc(db, "users", firebaseUser.uid));
           
           if (userDoc.exists()) {
-            setUser(userDoc.data() as User);
+            setUser(userDoc.data());
           } else {
             // This shouldn't happen in normal flow, but just in case
             console.error("User document doesn't exist for authenticated user");
@@ -115,7 +96,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     createDemoUsers();
   }, []);
 
-  const login = async (email: string, password: string, role: UserRole) => {
+  const login = async (email, password, role) => {
     setIsLoading(true);
     
     try {

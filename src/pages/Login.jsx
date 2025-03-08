@@ -7,16 +7,15 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { UserRole } from "@/context/AuthContext";
 
 const Login = () => {
   const { isAuthenticated, login, isLoading } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
-  const [activeTab, setActiveTab] = useState<UserRole>("admin");
+  const [activeTab, setActiveTab] = useState("admin");
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
     
@@ -39,7 +38,7 @@ const Login = () => {
           <p className="text-gray-600">Inventory Management System</p>
         </div>
 
-        <Tabs defaultValue="admin" onValueChange={(value) => setActiveTab(value as UserRole)}>
+        <Tabs defaultValue="admin" onValueChange={(value) => setActiveTab(value)}>
           <TabsList className="grid w-full grid-cols-2 mb-6">
             <TabsTrigger value="admin">Admin Login</TabsTrigger>
             <TabsTrigger value="user">Staff Login</TabsTrigger>

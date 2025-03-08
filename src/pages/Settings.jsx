@@ -32,7 +32,7 @@ const Settings = () => {
   });
   
   // Handle profile settings update
-  const handleProfileUpdate = (e: React.FormEvent) => {
+  const handleProfileUpdate = (e) => {
     e.preventDefault();
     
     if (profileSettings.password && profileSettings.password !== profileSettings.confirmPassword) {
@@ -52,7 +52,7 @@ const Settings = () => {
   };
   
   // Handle notification settings update
-  const handleNotificationUpdate = (e: React.FormEvent) => {
+  const handleNotificationUpdate = (e) => {
     e.preventDefault();
     
     // In a real app, this would update notification settings via API

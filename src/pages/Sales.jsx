@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import Layout from "@/components/Layout";
 import BackButton from "@/components/BackButton";
@@ -32,13 +33,12 @@ import { Plus, Search, Download, FileText, FileSpreadsheet, ChevronDown } from "
 import { format } from "date-fns";
 import { generateInvoicePDF, generateInvoicePDFForSales } from "@/utils/invoiceUtils";
 import { exportSalesToExcel } from "@/utils/excelUtils";
-import { SalesTransaction } from "@/context/InventoryContext";
 
 const Sales = () => {
   const { inventory, sales, recordSale } = useInventory();
   const [searchTerm, setSearchTerm] = useState("");
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
-  const [selectedSale, setSelectedSale] = useState<SalesTransaction | null>(null);
+  const [selectedSale, setSelectedSale] = useState(null);
   const [isInvoiceDialogOpen, setIsInvoiceDialogOpen] = useState(false);
   
   const [formData, setFormData] = useState({
@@ -82,7 +82,7 @@ const Sales = () => {
     resetForm();
   };
   
-  const handleViewInvoice = (sale: SalesTransaction) => {
+  const handleViewInvoice = (sale) => {
     setSelectedSale(sale);
     setIsInvoiceDialogOpen(true);
   };

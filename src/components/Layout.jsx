@@ -17,11 +17,7 @@ import {
 } from "lucide-react";
 import { useInventory } from "@/context/InventoryContext";
 
-interface LayoutProps {
-  children: React.ReactNode;
-}
-
-const Layout: React.FC<LayoutProps> = ({ children }) => {
+const Layout = ({ children }) => {
   const { user, isAuthenticated, logout } = useAuth();
   const { getLowStockItems } = useInventory();
   const [sidebarOpen, setSidebarOpen] = useState(true);
