@@ -6,13 +6,13 @@ import { getFirestore } from "firebase/firestore";
 // Your web app's Firebase configuration
 // For Firebase JS SDK v7.20.0 and later, measurementId is optional
 const firebaseConfig = {
-  apiKey: "YOUR_API_KEY", // Replace with your actual Firebase API key
-  authDomain: "adish-trading.firebaseapp.com",
-  projectId: "adish-trading",
-  storageBucket: "adish-trading.appspot.com",
-  messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
-  appId: "YOUR_APP_ID",
-  measurementId: "YOUR_MEASUREMENT_ID"
+ apiKey: "AIzaSyAG_Dana0TYqmGwPe8POYQD-2zJlrdDl94",
+  authDomain: "inventory-a2e9c.firebaseapp.com",
+  projectId: "inventory-a2e9c",
+  storageBucket: "inventory-a2e9c.firebasestorage.app",
+  messagingSenderId: "1051159319734",
+  appId: "1:1051159319734:web:22761b8755493820350217",
+  measurementId: "G-9L3KCEW0BQ"
 };
 
 // Initialize Firebase
