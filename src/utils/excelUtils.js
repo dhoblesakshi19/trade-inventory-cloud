@@ -2,6 +2,10 @@
 import * as XLSX from 'xlsx';
 import { format } from 'date-fns';
 
+/**
+ * Exports inventory data to Excel file
+ * @param {Array} inventory - Array of inventory items
+ */
 export const exportInventoryToExcel = (inventory) => {
   // Prepare data for export
   const data = inventory.map(item => ({
@@ -41,6 +45,10 @@ export const exportInventoryToExcel = (inventory) => {
   XLSX.writeFile(workbook, `inventory_${format(new Date(), 'yyyy-MM-dd')}.xlsx`);
 };
 
+/**
+ * Exports sales data to Excel file
+ * @param {Array} sales - Array of sales transactions
+ */
 export const exportSalesToExcel = (sales) => {
   // Prepare data for export
   const data = sales.map(sale => ({

@@ -3,6 +3,10 @@ import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { format } from 'date-fns';
 
+/**
+ * Generates a PDF invoice for a single sale
+ * @param {Object} sale - Sale transaction object
+ */
 export const generateInvoicePDF = (sale) => {
   const doc = new jsPDF();
   
@@ -37,7 +41,7 @@ export const generateInvoicePDF = (sale) => {
   });
   
   // Add totals
-  const finalY = doc.lastAutoTable.finalY + 10;
+  const finalY = (doc).lastAutoTable.finalY + 10;
   doc.text(`Subtotal: ₹${sale.totalAmount.toLocaleString()}`, 150, finalY, { align: 'right' });
   doc.text(`GST (18%): ₹${(sale.totalAmount * 0.18).toLocaleString()}`, 150, finalY + 5, { align: 'right' });
   doc.text(`Total: ₹${(sale.totalAmount * 1.18).toLocaleString()}`, 150, finalY + 10, { align: 'right' });
@@ -51,6 +55,10 @@ export const generateInvoicePDF = (sale) => {
   doc.save(`invoice_${sale.id}.pdf`);
 };
 
+/**
+ * Generates a PDF invoice for multiple sales
+ * @param {Array} sales - Array of sale transaction objects
+ */
 export const generateInvoicePDFForSales = (sales) => {
   if (sales.length === 0) return;
   
@@ -85,7 +93,7 @@ export const generateInvoicePDFForSales = (sales) => {
   });
   
   // Add totals
-  const finalY = doc.lastAutoTable.finalY + 10;
+  const finalY = (doc).lastAutoTable.finalY + 10;
   const totalAmount = sales.reduce((sum, sale) => sum + sale.totalAmount, 0);
   doc.text(`Subtotal: ₹${totalAmount.toLocaleString()}`, 150, finalY, { align: 'right' });
   doc.text(`GST (18%): ₹${(totalAmount * 0.18).toLocaleString()}`, 150, finalY + 5, { align: 'right' });
