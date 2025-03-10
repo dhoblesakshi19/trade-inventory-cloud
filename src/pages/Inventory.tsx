@@ -89,21 +89,14 @@ const Inventory = () => {
   return (
     <Layout>
       <div className="flex flex-col space-y-6">
-        <div className="flex items-center">
-          <BackButton className="mr-4" />
-          <div>
-            <h1 className="text-2xl font-bold text-gray-800">Inventory Management</h1>
-            <p className="text-gray-600">Manage your products and stock levels</p>
+        <div className="flex items-center justify-between">
+          <div className="flex items-center">
+            <BackButton className="mr-4" />
+            <div>
+              <h1 className="text-2xl font-bold text-gray-800">Inventory Management</h1>
+              <p className="text-gray-600">Manage your products and stock levels</p>
+            </div>
           </div>
-        </div>
-        
-        <SearchAndFilter 
-          searchTerm={searchTerm}
-          setSearchTerm={setSearchTerm}
-          onExportToExcel={handleExportToExcel}
-        />
-        
-        <div className="flex justify-end">
           <AddItemDialog
             isOpen={isAddDialogOpen}
             setIsOpen={setIsAddDialogOpen}
@@ -112,6 +105,12 @@ const Inventory = () => {
             onAddItem={handleAddItem}
           />
         </div>
+        
+        <SearchAndFilter 
+          searchTerm={searchTerm}
+          setSearchTerm={setSearchTerm}
+          onExportToExcel={handleExportToExcel}
+        />
         
         <InventoryTable 
           inventory={filteredInventory}
