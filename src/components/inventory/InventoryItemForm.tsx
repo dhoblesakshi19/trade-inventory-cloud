@@ -27,27 +27,31 @@ interface InventoryItemFormProps {
 
 const InventoryItemForm = ({ formData, setFormData }: InventoryItemFormProps) => {
   return (
-    <div className="grid gap-4 py-4">
-      <div className="grid grid-cols-2 gap-4">
+    <div className="space-y-6">
+      <div className="grid grid-cols-2 gap-6">
         <div className="space-y-2">
-          <Label htmlFor="name">Product Name</Label>
+          <Label htmlFor="name">
+            Item Name<span className="text-red-500">*</span>
+          </Label>
           <Input
             id="name"
             value={formData.name}
             onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-            placeholder="Enter product name"
+            placeholder="Enter item name"
             required
           />
         </div>
         
         <div className="space-y-2">
-          <Label htmlFor="category">Category</Label>
+          <Label htmlFor="category">
+            Category<span className="text-red-500">*</span>
+          </Label>
           <Select
             value={formData.category}
             onValueChange={(value) => setFormData({ ...formData, category: value })}
           >
             <SelectTrigger>
-              <SelectValue placeholder="Select category" />
+              <SelectValue placeholder="Select a category" />
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="Rice">Rice</SelectItem>
@@ -59,21 +63,26 @@ const InventoryItemForm = ({ formData, setFormData }: InventoryItemFormProps) =>
         </div>
       </div>
       
-      <div className="grid grid-cols-3 gap-4">
+      <div className="grid grid-cols-2 gap-6">
         <div className="space-y-2">
-          <Label htmlFor="quantity">Quantity</Label>
+          <Label htmlFor="quantity">
+            Initial Stock<span className="text-red-500">*</span>
+          </Label>
           <Input
             id="quantity"
             type="number"
             value={formData.quantity}
             onChange={(e) => setFormData({ ...formData, quantity: Number(e.target.value) })}
             min="0"
+            placeholder="Enter initial stock quantity"
             required
           />
         </div>
         
         <div className="space-y-2">
-          <Label htmlFor="unit">Unit</Label>
+          <Label htmlFor="unit">
+            Unit<span className="text-red-500">*</span>
+          </Label>
           <Select
             value={formData.unit}
             onValueChange={(value) => setFormData({ ...formData, unit: value })}
@@ -89,9 +98,13 @@ const InventoryItemForm = ({ formData, setFormData }: InventoryItemFormProps) =>
             </SelectContent>
           </Select>
         </div>
-        
+      </div>
+      
+      <div className="grid grid-cols-2 gap-6">
         <div className="space-y-2">
-          <Label htmlFor="unitPrice">Unit Price (₹)</Label>
+          <Label htmlFor="unitPrice">
+            Unit Price (₹)<span className="text-red-500">*</span>
+          </Label>
           <Input
             id="unitPrice"
             type="number"
@@ -99,16 +112,14 @@ const InventoryItemForm = ({ formData, setFormData }: InventoryItemFormProps) =>
             onChange={(e) => setFormData({ ...formData, unitPrice: Number(e.target.value) })}
             min="0"
             step="0.01"
+            placeholder="Enter cost price per unit"
             required
           />
         </div>
-      </div>
-      
-      <div className="grid grid-cols-2 gap-4">
+        
         <div className="space-y-2">
           <Label htmlFor="threshold">
-            Low Stock Threshold
-            <span className="text-xs text-gray-500 ml-1">(Alert below this)</span>
+            Low Stock Alert Threshold
           </Label>
           <Input
             id="threshold"
@@ -116,18 +127,19 @@ const InventoryItemForm = ({ formData, setFormData }: InventoryItemFormProps) =>
             value={formData.threshold}
             onChange={(e) => setFormData({ ...formData, threshold: Number(e.target.value) })}
             min="0"
+            placeholder="10"
             required
           />
         </div>
       </div>
       
       <div className="space-y-2">
-        <Label htmlFor="notes">Notes (Optional)</Label>
+        <Label htmlFor="notes">Description (Optional)</Label>
         <Input
           id="notes"
           value={formData.notes}
           onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
-          placeholder="Add any additional information"
+          placeholder="Enter item description"
         />
       </div>
     </div>

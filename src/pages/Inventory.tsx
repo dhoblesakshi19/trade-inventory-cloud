@@ -6,9 +6,11 @@ import { useInventory } from "@/context/InventoryContext";
 import { exportInventoryToExcel } from "@/utils/excelUtils";
 import InventoryTable from "@/components/inventory/InventoryTable";
 import InventoryItemForm, { InventoryFormData } from "@/components/inventory/InventoryItemForm";
-import AddItemDialog from "@/components/inventory/AddItemDialog";
 import EditItemDialog from "@/components/inventory/EditItemDialog";
 import SearchAndFilter from "@/components/inventory/SearchAndFilter";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Plus } from "lucide-react";
 
 const initialFormState: InventoryFormData = {
   name: "",
@@ -23,9 +25,9 @@ const initialFormState: InventoryFormData = {
 const Inventory = () => {
   const { inventory, addInventoryItem, updateInventoryItem, deleteInventoryItem } = useInventory();
   const [searchTerm, setSearchTerm] = useState("");
-  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [selectedItem, setSelectedItem] = useState<string | null>(null);
+  const [showAddForm, setShowAddForm] = useState(false);
   
   // Form state
   const [formData, setFormData] = useState<InventoryFormData>(initialFormState);
@@ -44,7 +46,7 @@ const Inventory = () => {
   // Handle add item
   const handleAddItem = () => {
     addInventoryItem(formData);
-    setIsAddDialogOpen(false);
+    setShowAddForm(false);
     resetForm();
   };
 
@@ -86,6 +88,43 @@ const Inventory = () => {
     exportInventoryToExcel(filteredInventory);
   };
 
+  if (showAddForm) {
+    return (
+      <Layout>
+        <div className="max-w-4xl mx-auto">
+          <div className="flex items-center mb-6">
+            <Button 
+              variant="outline" 
+              className="mr-4" 
+              onClick={() => setShowAddForm(false)}
+            >
+              Back to Inventory
+            </Button>
+            <h1 className="text-2xl font-bold text-gray-800">Add New Item</h1>
+          </div>
+          
+          <Card>
+            <CardHeader>
+              <CardTitle>Item Details</CardTitle>
+              <CardDescription>
+                Add a new product to your inventory. Fill in all the details below.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <InventoryItemForm formData={formData} setFormData={setFormData} />
+            </CardContent>
+            <CardFooter className="flex justify-end space-x-2">
+              <Button variant="outline" onClick={() => setShowAddForm(false)}>
+                Cancel
+              </Button>
+              <Button onClick={handleAddItem}>Add Item</Button>
+            </CardFooter>
+          </Card>
+        </div>
+      </Layout>
+    );
+  }
+
   return (
     <Layout>
       <div className="flex flex-col space-y-6">
@@ -97,13 +136,13 @@ const Inventory = () => {
               <p className="text-gray-600">Manage your products and stock levels</p>
             </div>
           </div>
-          <AddItemDialog
-            isOpen={isAddDialogOpen}
-            setIsOpen={setIsAddDialogOpen}
-            formData={formData}
-            setFormData={setFormData}
-            onAddItem={handleAddItem}
-          />
+          <Button 
+            className="bg-brand-600 hover:bg-brand-700"
+            onClick={() => setShowAddForm(true)}
+          >
+            <Plus className="w-4 h-4 mr-2" />
+            Add New Item
+          </Button>
         </div>
         
         <SearchAndFilter 
