@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useState, useEffect } from "react";
 import { 
   collection, 
@@ -10,7 +9,8 @@ import {
   onSnapshot,
   query,
   serverTimestamp,
-  setDoc
+  setDoc,
+  orderBy
 } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { useToast } from "@/hooks/use-toast";
@@ -140,9 +140,9 @@ export const InventoryProvider = ({ children }) => {
   useEffect(() => {
     setIsLoading(true);
     
-    // Subscribe to inventory changes
+    // Subscribe to inventory changes with ordering by lastUpdated
     const unsubscribeInventory = onSnapshot(
-      collection(db, "inventory"),
+      query(collection(db, "inventory"), orderBy("lastUpdated", "desc")),
       (snapshot) => {
         const items = [];
         snapshot.forEach((doc) => {
