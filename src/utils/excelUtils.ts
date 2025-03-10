@@ -1,6 +1,6 @@
 
 import * as XLSX from 'xlsx';
-import { InventoryItem, SalesTransaction } from '@/context/InventoryContext';
+import { InventoryItem, SalesTransaction } from '@/types/inventory.types';
 import { format } from 'date-fns';
 
 export const exportInventoryToExcel = (inventory: InventoryItem[]) => {
@@ -17,9 +17,6 @@ export const exportInventoryToExcel = (inventory: InventoryItem[]) => {
     'Notes': item.notes || ''
   }));
   
-  // Create worksheet
-  const worksheet = XLSX.utils.json_to_sheet(data);
-  
   // Set column widths
   const cols = [
     { wch: 20 }, // Product Name
@@ -32,6 +29,9 @@ export const exportInventoryToExcel = (inventory: InventoryItem[]) => {
     { wch: 15 }, // Last Updated
     { wch: 30 }, // Notes
   ];
+  
+  // Create worksheet
+  const worksheet = XLSX.utils.json_to_sheet(data);
   worksheet['!cols'] = cols;
   
   // Create workbook

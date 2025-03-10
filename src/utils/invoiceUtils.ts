@@ -1,7 +1,7 @@
 
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
-import { SalesTransaction } from '@/context/InventoryContext';
+import { SalesTransaction } from '@/types/inventory.types';
 import { format } from 'date-fns';
 
 export const generateInvoicePDF = (sale: SalesTransaction) => {
