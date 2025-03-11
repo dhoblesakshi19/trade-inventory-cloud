@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { format } from "date-fns";
 import { 
@@ -65,15 +64,12 @@ const Sales = () => {
   const selectedProduct = inventory.find((item) => item.id === formData.productId);
   const totalAmount = selectedProduct ? selectedProduct.unitPrice * formData.quantity : 0;
   
-  // Calculate sales metrics
   const totalRevenue = sales.reduce((sum, sale) => sum + sale.totalAmount, 0);
   const totalUnitsSold = sales.reduce((sum, sale) => sum + sale.quantity, 0);
   const avgSaleValue = sales.length > 0 ? totalRevenue / sales.length : 0;
 
-  // Sort sales by date (newest first)
   const recentSales = [...sales].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
   
-  // Generate dummy data for sales trend chart
   const salesTrendData = [
     { name: 'Jan', revenue: 4000 },
     { name: 'Feb', revenue: 3000 },
@@ -84,7 +80,6 @@ const Sales = () => {
     { name: 'Jul', revenue: 7000 }
   ];
   
-  // Generate dummy data for sales by category
   const categoryData = [
     { name: 'Rice', value: 40 },
     { name: 'Wheat', value: 30 },
@@ -155,7 +150,6 @@ const Sales = () => {
           </Button>
         </div>
         
-        {/* Sales Filters */}
         <Card>
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
@@ -213,9 +207,7 @@ const Sales = () => {
           </CardContent>
         </Card>
         
-        {/* Sales Metrics */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {/* Total Revenue */}
           <Card>
             <CardHeader className="pb-2">
               <CardTitle className="text-sm font-medium text-gray-500">Total Revenue</CardTitle>
@@ -230,7 +222,6 @@ const Sales = () => {
             </CardContent>
           </Card>
           
-          {/* Units Sold */}
           <Card>
             <CardHeader className="pb-2">
               <CardTitle className="text-sm font-medium text-gray-500">Units Sold</CardTitle>
@@ -245,7 +236,6 @@ const Sales = () => {
             </CardContent>
           </Card>
           
-          {/* Average Sale Value */}
           <Card>
             <CardHeader className="pb-2">
               <CardTitle className="text-sm font-medium text-gray-500">Avg Sale Value</CardTitle>
@@ -261,9 +251,7 @@ const Sales = () => {
           </Card>
         </div>
         
-        {/* Charts */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {/* Sales Trend */}
           <Card>
             <CardHeader className="pb-0">
               <div className="flex items-center gap-2">
@@ -296,7 +284,6 @@ const Sales = () => {
             </CardContent>
           </Card>
           
-          {/* Sales by Category */}
           <Card>
             <CardHeader className="pb-0">
               <div className="flex items-center gap-2">
@@ -339,7 +326,6 @@ const Sales = () => {
           </Card>
         </div>
         
-        {/* Recent Sales */}
         <Card>
           <CardHeader className="pb-0">
             <div className="flex items-center justify-between">
@@ -350,14 +336,14 @@ const Sales = () => {
               
               <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
                 <DialogTrigger asChild>
-                  <Button size="sm" className="bg-brand-600 hover:bg-brand-700">
+                  <Button className="bg-blue-600 hover:bg-blue-700">
                     <Plus className="w-4 h-4 mr-2" />
                     Add Sale
                   </Button>
                 </DialogTrigger>
-                <DialogContent>
+                <DialogContent className="sm:max-w-md">
                   <DialogHeader>
-                    <DialogTitle>Record New Sale</DialogTitle>
+                    <DialogTitle className="text-xl">Record New Sale</DialogTitle>
                     <DialogDescription>
                       Record a new product sale. This will reduce inventory quantity.
                     </DialogDescription>
@@ -365,12 +351,12 @@ const Sales = () => {
                   
                   <div className="grid gap-4 py-4">
                     <div className="space-y-2">
-                      <Label htmlFor="product">Product</Label>
+                      <Label htmlFor="product" className="text-sm font-medium">Product</Label>
                       <Select
                         value={formData.productId}
                         onValueChange={(value) => setFormData({ ...formData, productId: value })}
                       >
-                        <SelectTrigger>
+                        <SelectTrigger className="w-full">
                           <SelectValue placeholder="Select product" />
                         </SelectTrigger>
                         <SelectContent>
@@ -387,7 +373,7 @@ const Sales = () => {
                       <>
                         <div className="grid grid-cols-2 gap-4">
                           <div className="space-y-2">
-                            <Label htmlFor="quantity">Quantity</Label>
+                            <Label htmlFor="quantity" className="text-sm font-medium">Quantity</Label>
                             <Input
                               id="quantity"
                               type="number"
@@ -396,38 +382,40 @@ const Sales = () => {
                               min="1"
                               max={selectedProduct.quantity}
                               required
+                              className="w-full"
                             />
                           </div>
                           
                           <div className="space-y-2">
-                            <Label>Unit Price</Label>
-                            <div className="p-2 border rounded-md bg-gray-50">
+                            <Label className="text-sm font-medium">Unit Price</Label>
+                            <div className="flex h-10 w-full items-center rounded-md border bg-gray-50 px-3">
                               ₹{selectedProduct.unitPrice.toLocaleString()}
                             </div>
                           </div>
                         </div>
                         
                         <div className="space-y-2">
-                          <Label>Total Amount</Label>
-                          <div className="p-2 border rounded-md bg-gray-50 font-medium text-green-700">
+                          <Label className="text-sm font-medium">Total Amount</Label>
+                          <div className="flex h-10 w-full items-center rounded-md border bg-gray-50 px-3 font-medium text-green-700">
                             ₹{totalAmount.toLocaleString()}
                           </div>
                         </div>
                         
-                        <div className="text-sm text-gray-500">
+                        <div className="text-sm text-gray-500 mt-2">
                           Current stock: {selectedProduct.quantity} {selectedProduct.unit}
                         </div>
                       </>
                     )}
                   </div>
                   
-                  <DialogFooter>
+                  <DialogFooter className="mt-4">
                     <Button variant="outline" onClick={() => setIsAddDialogOpen(false)}>
                       Cancel
                     </Button>
                     <Button 
                       onClick={handleRecordSale}
                       disabled={!selectedProduct || formData.quantity < 1 || formData.quantity > (selectedProduct?.quantity || 0)}
+                      className="bg-blue-600 hover:bg-blue-700"
                     >
                       Record Sale
                     </Button>
@@ -546,7 +534,7 @@ const Sales = () => {
             <Button variant="outline" onClick={() => setIsInvoiceDialogOpen(false)}>
               Close
             </Button>
-            <Button onClick={downloadInvoice}>
+            <Button onClick={downloadInvoice} className="bg-blue-600 hover:bg-blue-700">
               <Download className="w-4 h-4 mr-2" />
               Download PDF
             </Button>
