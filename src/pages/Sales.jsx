@@ -333,9 +333,12 @@ const Sales = () => {
                 <CardTitle>Recent Sales</CardTitle>
               </div>
               
-              <Dialog>
+              <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
                 <DialogTrigger asChild>
-                  <Button className="bg-blue-600 hover:bg-blue-700">
+                  <Button 
+                    className="bg-blue-600 hover:bg-blue-700" 
+                    onClick={() => setIsAddDialogOpen(true)}
+                  >
                     <Plus className="w-4 h-4 mr-2" />
                     Add Sale
                   </Button>
