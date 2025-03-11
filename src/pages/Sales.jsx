@@ -1,18 +1,17 @@
+
 import React, { useState, useEffect } from "react";
 import { format } from "date-fns";
 import { 
-  BarChart3, 
+  BarChart, 
   Calendar, 
   Download, 
   FileText, 
-  FileSpreadsheet, 
   Filter, 
   PieChart, 
   Plus, 
   TrendingUp, 
   DollarSign, 
-  ShoppingCart, 
-  BarChart
+  ShoppingCart 
 } from "lucide-react";
 import Layout from "@/components/Layout";
 import { useInventory } from "@/context/InventoryContext";
@@ -278,7 +277,7 @@ const Sales = () => {
               <div className="flex justify-center items-center mt-4">
                 <div className="flex items-center gap-2 text-sm text-gray-500">
                   <div className="w-3 h-3 rounded-full bg-indigo-500"></div>
-                  <span>revenue</span>
+                  <span>Revenue</span>
                 </div>
               </div>
             </CardContent>
@@ -334,7 +333,7 @@ const Sales = () => {
                 <CardTitle>Recent Sales</CardTitle>
               </div>
               
-              <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
+              <Dialog>
                 <DialogTrigger asChild>
                   <Button className="bg-blue-600 hover:bg-blue-700">
                     <Plus className="w-4 h-4 mr-2" />
